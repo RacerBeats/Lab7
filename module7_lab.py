@@ -51,6 +51,86 @@ class Stack:
         """Get the size of the stack by returning the size of the linked list."""
         return self.list.size
     
+class ArrayQueue:
+    """ A queue class using an array based implementation."""
+    def __init__(self, max_length=-1):
+        """Initialize the queue with an empty array of specified capacity."""
+        self.queue_list = [0]
+        self.front_index = 0
+        self.length = 0
+        self.max_length = max_length
+
+    def front(self):
+        """Return the customer call at the front of the queue without removing it.
+        Raise an error if the queue is empty."""
+        if self.is_empty():
+            raise IndexError('Cannot access front of an empty queue.')
+        return self.array[self.front_index]
+    
+    def is_empty(self):
+        """Check if the queue is empty."""
+        return self.size == 0
+    
+    def get_size(self):
+        """Return the current number of calls in the queue."""
+        return self.size
+
+    def enqueue(self, call_details):
+        """Add a new customer call to the rear of the queue.
+        If the queue is full, resize the array to double its capacity."""
+        #if max length, return False
+        if self.length == self.max_length:
+            return False
+        
+        #resize if length = allocation size
+        if self.length == len(self.queue_list):
+            self.resize()
+        
+        #enqueue the item
+        item_index = (self.front_index + self.length) % len(self.queue_list)
+        self.queue_list[item_index] = call_details
+        self.length += 1
+        return True
+
+    def dequeue(self):
+        #raise error if empty
+        if self.is_empty():
+            raise IndexError('Cannot dequeue from an empty queue.')
+
+        #get the front item
+        call = self.array[self.front_index]
+
+        # Set the front position to None
+        self.array[self.front_index] = None
+
+        #decremement length, advance front index
+        self.front_index = (self.front_index + 1) % len(self.queue_list)
+        self.length -= 1
+
+        #return front item
+        return call
+    
+    def resize(self):
+        """double capacity of array when it becomes full"""
+        #create new list and copy existing items
+        new_size = len(self.queue_list) * 2
+        new_list = [0] * new_size
+
+        #copy items to new list
+        if self.max_length >= 0 and new_size > self.max_length:
+            new_size = max_length
+        
+        current_index = self.front_index
+        for i in range(self.length):
+            item_index = (current_index + i) % len(self.queue_list)
+            new_list[i] = self.array[item_index]
+        
+        #assign new list and reset front index to 0
+        self.queue_list = new_list
+        self.front_index = 0
+        self.array = new_array
+        self.capacity = new_capacity
+        self.rear_index = self.length - 1
 
 if __name__ == '__main__':
     """Testing the Stack class"""
@@ -113,3 +193,85 @@ if __name__ == '__main__':
 
     #test the get_size method
     print('Size of stack:', customer.get_size())
+
+    print("\n\nTesting Customer Service Call Queue")
+    print("===================================")
+    
+    # Instantiate a Queue object
+    call_queue = Queue()
+    
+    # Testing operations on an empty queue
+    print('Is the queue empty?')
+    print(call_queue.is_empty())
+    print('Size of queue:', call_queue.get_size())
+    
+    # Test the front method on an empty queue
+    print('Checking the front call in the queue:')
+    try:
+        print(call_queue.front())
+    except IndexError as e:
+        print(e)
+    
+    # Test the dequeue method on an empty queue
+    print('Dequeuing a call from the queue:')
+    try:
+        print(call_queue.dequeue())
+    except IndexError as e:
+        print(e)
+    
+    # Test the enqueue method with several calls
+    print('\nEnqueuing customer service calls:')
+    call_queue.enqueue("Call 1: Customer needs help with ticket transfer")
+    call_queue.enqueue("Call 2: Customer requesting refund information")
+    call_queue.enqueue("Call 3: Customer inquiring about event details")
+    call_queue.enqueue("Call 4: Customer reporting website issues")
+    call_queue.enqueue("Call 5: Customer needs assistance with seating arrangements")
+    
+    # Print the queue after enqueuing calls
+    print('Queue after enqueuing calls:')
+    for i in range(call_queue.get_size()):
+        index = (call_queue.front_index + i) % call_queue.capacity
+        print(call_queue.array[index])
+    print()
+    
+    # Test the front method
+    print('Checking the front call in the queue:')
+    print(call_queue.front())
+    print()
+    
+    # Test the dequeue method
+    print('Dequeuing calls from the queue:')
+    print(call_queue.dequeue())
+    print(call_queue.dequeue())
+    print()
+    
+    # Check the front call after dequeuing
+    print('Checking the front call after dequeuing:')
+    print(call_queue.front())
+    print()
+    
+    # Test the is_empty method
+    print('Is the queue empty?')
+    print(call_queue.is_empty())
+    print()
+    
+    # Test the get_size method
+    print('Size of queue:', call_queue.get_size())
+    print()
+    
+    # Test resizing by adding more calls
+    print('Testing queue resizing by adding more calls:')
+    call_queue.enqueue("Call 6: Customer needs help with group booking")
+    call_queue.enqueue("Call 7: Customer inquiring about parking options")
+    call_queue.enqueue("Call 8: Customer requesting accessibility information")
+    
+    # Print the queue after resizing
+    print('Queue after adding more calls (should resize):')
+    print('New capacity:', call_queue.capacity)
+    print('Current size:', call_queue.get_size())
+    
+    # Print all calls in the queue
+    print('All calls in the queue:')
+    for i in range(call_queue.get_size()):
+        index = (call_queue.front_index + i) % call_queue.capacity
+        print(call_queue.array[index])
