@@ -6,8 +6,44 @@
 # Week 7 Lab: Implementing Stacks and Queues
 
 #import Node and LinkedList classes
-from Node import Node
-from LinkedList import LinkedList
+#from Node import Node
+#from LinkedList import LinkedList
+
+#Temp fix: have node and linked list classes in same file
+class Node:
+    """A node in a linked list."""
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+class LinkedList:
+    """A linked list implementation."""
+    def __init__(self):
+        self.head = None
+        self.size = 0
+    
+    def prepend(self, new_node):
+        """Add a node to the beginning of the list."""
+        if self.head is None:
+            self.head = new_node
+        else:
+            new_node.next = self.head
+            self.head = new_node
+        self.size += 1
+    
+    def remove_after(self, prev_node):
+        """Remove the node after prev_node. If prev_node is None, remove the head."""
+        if self.head is None:
+            return
+        
+        if prev_node is None:
+            # Remove the head
+            self.head = self.head.next
+        elif prev_node.next is not None:
+            # Remove the node after prev_node
+            prev_node.next = prev_node.next.next
+        
+        self.size -= 1
 
 """
 Stack class: This is a stack implementation using a linked list. It simulates a stack of customer cancellation details.
@@ -51,14 +87,15 @@ class Stack:
         """Get the size of the stack by returning the size of the linked list."""
         return self.list.size
     
-class ArrayQueue:
+class Queue:
     """ A queue class using an array based implementation."""
-    def __init__(self, max_length=-1):
+    def __init__(self, capacity=5):
         """Initialize the queue with an empty array of specified capacity."""
-        self.queue_list = [0]
+        self.capacity = capacity
+        self.array = [None] * capacity
+        self.size = 0
         self.front_index = 0
-        self.length = 0
-        self.max_length = max_length
+        self.rear_index = -1
 
     def front(self):
         """Return the customer call at the front of the queue without removing it.
@@ -78,19 +115,18 @@ class ArrayQueue:
     def enqueue(self, call_details):
         """Add a new customer call to the rear of the queue.
         If the queue is full, resize the array to double its capacity."""
-        #if max length, return False
-        if self.length == self.max_length:
-            return False
+        #if max size, return False
+        if self.size == self.capacity:
+            self.resize()
         
-        #resize if length = allocation size
-        if self.length == len(self.queue_list):
+        #resize if size = allocation size
+        if self.size == self.capacity:
             self.resize()
         
         #enqueue the item
-        item_index = (self.front_index + self.length) % len(self.queue_list)
-        self.queue_list[item_index] = call_details
-        self.length += 1
-        return True
+        self.rear_index = (self.rear_index + 1) % self.capacity
+        self.array[self.rear_index] = call_details
+        self.size += 1
 
     def dequeue(self):
         #raise error if empty
@@ -103,9 +139,9 @@ class ArrayQueue:
         # Set the front position to None
         self.array[self.front_index] = None
 
-        #decremement length, advance front index
-        self.front_index = (self.front_index + 1) % len(self.queue_list)
-        self.length -= 1
+        #decremement size, advance front index
+        self.front_index = (self.front_index + 1) % self.capacity
+        self.size -= 1
 
         #return front item
         return call
@@ -113,24 +149,20 @@ class ArrayQueue:
     def resize(self):
         """double capacity of array when it becomes full"""
         #create new list and copy existing items
-        new_size = len(self.queue_list) * 2
-        new_list = [0] * new_size
+        new_capacity = self.capacity * 2
+        new_array = [None] * new_capacity
 
         #copy items to new list
-        if self.max_length >= 0 and new_size > self.max_length:
-            new_size = max_length
-        
         current_index = self.front_index
-        for i in range(self.length):
-            item_index = (current_index + i) % len(self.queue_list)
-            new_list[i] = self.array[item_index]
+        for i in range(self.size):
+            new_array[i] = self.array[current_index]
+            current_index = (current_index + 1) % self.capacity
         
-        #assign new list and reset front index to 0
-        self.queue_list = new_list
-        self.front_index = 0
+        # Update the queue attributes
         self.array = new_array
         self.capacity = new_capacity
-        self.rear_index = self.length - 1
+        self.front_index = 0
+        self.rear_index = self.size - 1
 
 if __name__ == '__main__':
     """Testing the Stack class"""
@@ -204,7 +236,8 @@ if __name__ == '__main__':
     print('Is the queue empty?')
     print(call_queue.is_empty())
     print('Size of queue:', call_queue.get_size())
-    
+    print('Verification - Array state:', call_queue.array)
+
     # Test the front method on an empty queue
     print('Checking the front call in the queue:')
     try:
@@ -234,6 +267,15 @@ if __name__ == '__main__':
         print(call_queue.array[index])
     print()
     
+    # Verify queue size and contents
+    print('Verification:')
+    print('Reported size:', call_queue.get_size())
+    print('Capacity:', call_queue.capacity)
+    print('Front index:', call_queue.front_index)
+    print('Rear index:', call_queue.rear_index)
+    print('Full array state:', call_queue.array)
+    print()
+
     # Test the front method
     print('Checking the front call in the queue:')
     print(call_queue.front())
@@ -245,6 +287,15 @@ if __name__ == '__main__':
     print(call_queue.dequeue())
     print()
     
+    # Verify queue size after dequeuing
+    print('Verification after dequeuing:')
+    print('Reported size:', call_queue.get_size())
+    print('Capacity:', call_queue.capacity)
+    print('Front index:', call_queue.front_index)
+    print('Rear index:', call_queue.rear_index)
+    print('Full array state:', call_queue.array)
+    print()
+
     # Check the front call after dequeuing
     print('Checking the front call after dequeuing:')
     print(call_queue.front())
@@ -269,6 +320,15 @@ if __name__ == '__main__':
     print('Queue after adding more calls (should resize):')
     print('New capacity:', call_queue.capacity)
     print('Current size:', call_queue.get_size())
+
+    # Verify queue size and contents after resizing
+    print('Verification after resizing:')
+    print('Reported size:', call_queue.get_size())
+    print('Capacity:', call_queue.capacity)
+    print('Front index:', call_queue.front_index)
+    print('Rear index:', call_queue.rear_index)
+    print('Full array state:', call_queue.array)
+    print()
     
     # Print all calls in the queue
     print('All calls in the queue:')
